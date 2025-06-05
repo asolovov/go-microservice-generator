@@ -2,6 +2,7 @@ package root
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -19,11 +20,18 @@ func Cmd(app *internal.App) *cobra.Command {
 		Short:            "Go Microservice Generator",
 		TraverseChildren: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if isVersion, _ := cmd.Flags().GetBool("version"); isVersion {
+				fmt.Println(app.Version())
+				os.Exit(0)
+			}
+
 			return initializeConfig(cmd, app.Config())
 		},
+		Version: app.Version(),
 	}
 
-	cmd.SetVersionTemplate(app.Version())
+	cmd.SetVersionTemplate(app.Version() + "\n")
+	cmd.PersistentFlags().BoolP("version", "v", false, "Show application version")
 
 	return cmd
 }
