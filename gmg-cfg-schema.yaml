@@ -1,0 +1,97 @@
+# project root e.g. .
+!required
+root: !!str
+
+# project go package name e.g. test_project
+!required
+go-package: !!str
+
+# run go mod init cmd
+!required
+go-mod-generate: !!bool
+
+cfg:
+  !required
+  generate: !!bool
+
+app:
+  !required
+  generate: !!bool
+
+cmd:
+  !required
+  generate: !!bool
+
+service:
+  !required
+  generate: !!bool
+
+grpc-server:
+  !required
+  generate: !!bool
+
+  # default server address e.g. 0.0.0.0:9090
+  default-addr: !!str
+
+  !required
+  proto-service:
+    # proto service path (from project root) e.g. /protocols/user
+    !required
+    path: !!str
+
+    # .pb service name e.g. UserService
+    !required
+    pb-name: !!str
+
+    # go package name e.g. users_pb
+    !required
+    go-name: !!str
+
+  !required
+  proto-models:
+    # proto models path (from project root). Can be the same as proto-service.path or other e.g. /protocols/models
+    !required
+    path: !!str
+
+    # go package name. Can be the same as proto-service.go-name or other e.g. models_pb
+    !required
+    go-name: !!str
+
+repository:
+  !required
+  generate: !!bool
+
+  # default db address e.g. postgres://postgres:postgres@localhost:5432/users?sslmode=disable
+  default-addr: !!str
+
+  # migration files path. If given will generate db models. e.g. /migrations
+  migrations-path: !!str
+
+models:
+  !required
+  generate: !!bool
+
+  # a path to existing models. AI Agent and generator will not modify existing models, only add parsing methods if
+  # requested
+  path: !!str
+
+  # optional request to an ai agent to create parsing methods for models
+  ai:
+    !required
+    generate: !!bool
+
+    # .pb model file paths
+    !required
+    pb-model-paths: !!seq
+
+    # parsing rules for models. Agent will receive a prompt to write code for parsing models from one type to another
+    # see gmg-cfg-example.yaml for more details
+    !required
+    parsing-rules:
+      # proto name => domain name
+      proto-domain: !!map
+      # domain name => database name
+      domain-db: !!map
+
+    # will be set before the generated parsing-rules prompt
+    additional-prompt: !!str
