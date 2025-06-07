@@ -1,0 +1,125 @@
+{{- define "application" -}}
+package internal
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "syscall"
+
+    "github.com/misnaged/annales/logger"
+    version "github.com/misnaged/annales/versioner"
+    "github.com/sirupsen/logrus"
+
+    "{{.GoPackage}}/config"
+    {{- if .Repository.Generate}}
+    "{{.GoPackage}}/internal/repository"
+    {{- end}}
+    {{- if .Service.Generate}}
+    "{{.GoPackage}}/internal/service"
+    {{- end}}
+    {{- if .IsServer}}
+    "{{.GoPackage}}/internal/server"
+    {{- end}}
+    {{- if .GrpcServer.Generate}}
+    "{{.GoPackage}}/internal/server/grpcServer"
+    {{- end}}
+)
+
+// App is main microservice application instance that
+// have all necessary dependencies inside structure
+type App struct {
+    // application configuration
+    config *config.Scheme
+
+    version *version.Version
+    {{- if .Repository.Generate}}
+    repository repository.IRepository
+    {{- end}}
+    {{- if .Service.Generate}}
+	service service.IService
+    {{- end}}
+    {{- if .GrpcServer.Generate}}
+    grpcServer server.IServer
+    {{- end}}
+}
+
+// NewApplication create new App instance
+func NewApplication() (app *App, err error) {
+    ver, err := version.NewVersion()
+    if err != nil {
+        return nil, fmt.Errorf("init app version: %w", err)
+    }
+
+    return &App{
+        config:  &config.Scheme{},
+        version: ver,
+    }, nil
+}
+
+// Init initialize application and all necessary instances
+func (app *App) Init() (err error) {
+    if app.config.Debug {
+        logger.Log().SetLevel(logrus.DebugLevel)
+        logger.Log().Infof("DEBUG LOGS ON")
+    } else {
+        logger.Log().Infof("DEBUG LOGS OFF")
+    }
+
+    {{if .Repository.Generate -}}
+    if app.repository, err = repository.New(app.config.Repository); err != nil {
+		return fmt.Errorf("new repository: %w", err)
+    }
+    {{- end}}
+    {{- if .Service.Generate}}
+    if app.service, err = service.New(app.config.Service{{if .Repository.Generate}}, app.repository{{end}}); err != nil {
+        return fmt.Errorf("new service: %w", err)
+    }
+    {{- end}}
+    {{- if .GrpcServer.Generate}}
+    if app.grpcServer, err = grpcServer.New(app.config.GrpcServer{{if .Service.Generate}}, app.service{{end}}); err != nil {
+        return fmt.Errorf("new grpc server: %w", err)
+    }
+    {{- end}}
+
+
+    return nil
+}
+
+// Serve start serving Application service
+func (app *App) Serve() error {
+	{{- if .GrpcServer.Generate}}
+	go app.grpcServer.ListenAndServe()
+	{{- end}}
+
+    // Gracefully shutdown the server
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+    <-quit
+
+    app.Stop()
+
+    return nil
+}
+
+// Stop shutdown the application
+func (app *App) Stop() {
+
+}
+
+// Config return App config Scheme
+func (app *App) Config() *config.Scheme {
+    return app.config
+}
+
+// Version return application current version
+func (app *App) Version() string {
+    return app.version.String()
+}
+
+// CreateAddr is create address string from host and port
+func CreateAddr(host string, port int) string {
+    return fmt.Sprintf("%s:%v", host, port)
+}
+{{- end -}}

@@ -1,0 +1,39 @@
+{{- define "repository" -}}
+package repository
+
+import (
+	"fmt"
+
+	"github.com/misnaged/annales/logger"
+)
+
+type IRepository interface {
+	Close()
+}
+
+type repository struct {
+	cfg *Config
+}
+
+func New(cfg *Config) (IRepository, error) {
+	r := &repository{
+		cfg: cfg,
+	}
+
+	if err := r.init(); err != nil {
+		return nil, fmt.Errorf("init repository: %w", err)
+	}
+
+	return r, nil
+}
+
+func (r *repository) init() (err error) {
+	logger.Log().Infof("repository: init")
+	return nil
+}
+
+func (r *repository) Close() {
+	logger.Log().Infof("repository: close")
+}
+
+{{- end -}}

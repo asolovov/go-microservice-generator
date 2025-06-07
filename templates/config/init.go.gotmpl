@@ -1,0 +1,25 @@
+{{- define "configInit" -}}
+package config
+
+import (
+    "github.com/spf13/viper"
+)
+
+// init initialize default config params
+func init() {
+    // environment - could be "local", "prod", "dev"
+    viper.SetDefault("env", "prod")
+    viper.SetDefault("Debug", true)
+
+    {{if .Repository.Generate -}}
+    viper.SetDefault("Repository.Address", "{{.Repository.DefaultAddr}}")
+    {{- end}}
+
+    {{if .GrpcServer.Generate -}}
+    viper.SetDefault("GrpcServer.Address", "{{.GrpcServer.DefaultAddr}}")
+    viper.SetDefault("GrpcServer.Timeout", "24h")
+    viper.SetDefault("GrpcServer.MsgSizeReceive", 1024*1024*50)
+    viper.SetDefault("GrpcServer.MsgSizeSend", 1024*1024*50)
+    {{- end}}
+}
+{{- end -}}

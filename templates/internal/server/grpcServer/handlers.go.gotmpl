@@ -1,0 +1,26 @@
+{{- define "grpcHandlers" -}}
+package grpcServer
+
+import (
+    {{if .Service.Generate -}}
+    "{{.GoPackage}}/internal/service"
+    {{- end}}
+    "{{.GoPackage}}{{.GrpcServer.ProtoService.Path}}"
+	{{if not .GrpcServer.ProtoModels.SameAsService -}}
+	"{{.GoPackage}}{{.GrpcServer.ProtoModels.Path}}"
+    {{- end}}
+)
+
+type handlers struct {
+    {{if .Service.Generate}}srv service.IService{{end}}
+
+    {{.GrpcServer.ProtoService.GoName}}.Unimplemented{{.GrpcServer.ProtoService.PbName}}Server
+}
+
+func newHandlers({{if .Service.Generate}}srv service.IService{{end}}) *handlers {
+    return &handlers{
+        {{if .Service.Generate}}srv: srv,{{end}}
+    }
+}
+
+{{- end -}}

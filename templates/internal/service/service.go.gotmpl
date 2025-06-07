@@ -1,0 +1,45 @@
+{{- define "service" -}}
+package service
+
+import (
+	"fmt"
+
+	"github.com/misnaged/annales/logger"
+
+	{{if .Repository.Generate -}}
+	"{{.GoPackage}}/internal/repository"
+	{{- end}}
+)
+
+type IService interface {
+	Close()
+}
+
+type service struct {
+	cfg *Config
+	{{if .Repository.Generate}}rep repository.IRepository{{end}}
+}
+
+func New(cfg *Config{{if .Repository.Generate}}, rep repository.IRepository{{end}}) (IService, error) {
+	r := &service{
+		cfg: cfg,
+		{{if .Repository.Generate}}rep: rep,{{end}}
+	}
+
+	if err := r.init(); err != nil {
+		return nil, fmt.Errorf("init service: %w", err)
+	}
+
+	return r, nil
+}
+
+func (r *service) init() (err error) {
+	logger.Log().Infof("service: init")
+	return nil
+}
+
+func (r *service) Close() {
+	logger.Log().Infof("service: close")
+}
+
+{{- end -}}

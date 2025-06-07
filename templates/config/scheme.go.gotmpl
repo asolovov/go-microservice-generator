@@ -1,0 +1,32 @@
+{{- define "configScheme"}}
+package config
+
+import (
+    {{- if .Repository.Generate}}
+	"{{.GoPackage}}/internal/repository"
+    {{- end}}
+    {{- if .Service.Generate}}
+	"{{.GoPackage}}/internal/service"
+    {{- end}}
+    {{- if .GrpcServer.Generate}}
+	"{{.GoPackage}}/internal/server/grpcServer"
+    {{- end}}
+)
+
+// Scheme represents the application configuration scheme.
+type Scheme struct {
+    // Env is the application environment.
+    Env   string
+    Debug bool
+
+	{{if .Repository.Generate -}}
+	Repository *repository.Config
+	{{- end}}
+    {{if .Service.Generate -}}
+    Service *service.Config
+    {{- end}}
+    {{if .GrpcServer.Generate -}}
+    GrpcServer *grpcServer.Config
+    {{- end}}
+}
+{{- end -}}

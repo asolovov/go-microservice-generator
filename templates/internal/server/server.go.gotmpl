@@ -1,0 +1,9 @@
+{{- define "server" -}}
+package server
+
+type IServer interface {
+	ListenAndServe()
+	Close()
+}
+
+{{- end -}}

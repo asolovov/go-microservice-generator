@@ -1,0 +1,10 @@
+{{- define "grpcServerCfg" -}}
+package grpcServer
+
+type Config struct {
+	Address        string
+	Timeout        string
+	MsgSizeReceive int
+	MsgSizeSend    int
+}
+{{- end -}}

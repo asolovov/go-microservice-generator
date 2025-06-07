@@ -1,0 +1,110 @@
+{{- define "grpc" -}}
+package grpcServer
+
+import (
+	"fmt"
+	"net"
+	"time"
+
+	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	mwLogging "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	mwRecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	"github.com/misnaged/annales/logger"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
+
+	"{{.GoPackage}}/internal/server"
+	"{{.GoPackage}}{{.GrpcServer.ProtoService.Path}}"
+	{{if .Service.Generate -}}
+	"{{.GoPackage}}/internal/service"
+	{{- end}}
+)
+
+// server is a server layer implementation
+type grpcServer struct {
+	conf *Config
+	{{- if .Service.Generate}}
+	srv service.IService
+	{{- end}}
+
+	*grpc.Server
+}
+
+// New is used to get new server implementation instance
+func New(conf *Config{{if .Service.Generate}}, srv service.IService{{end}}) (server.IServer, error) {
+	s := &grpcServer{
+		conf: conf,
+		{{if .Service.Generate}}srv: srv,{{end}}
+	}
+
+	if err := s.init(); err != nil {
+		return nil, fmt.Errorf("err init grpc server: %w", err)
+	}
+
+	{{.GrpcServer.ProtoService.GoName}}.Register{{.GrpcServer.ProtoService.PbName}}Server(s, newHandlers({{if .Service.Generate}}srv{{end}}))
+
+	return s, nil
+}
+
+// init is used to init server
+func (s *grpcServer) init() error {
+	duration, err := time.ParseDuration(s.conf.Timeout)
+	if err != nil {
+		logger.Log().Errorf("err parse duration from config: %v", err.Error())
+		return err
+	}
+
+	middlewares := middleware.ChainUnaryServer(
+		mwLogging.UnaryServerInterceptor(logger.Log().WithField("layer", "grpc-server")),
+		mwRecovery.UnaryServerInterceptor(),
+	)
+
+	var kaep = keepalive.EnforcementPolicy{
+		MinTime:             5 * time.Second, // If a client pings more than once every 5 seconds, terminate the connection
+		PermitWithoutStream: true,            // Allow pings even when there are no active streams
+	}
+
+	var kasp = keepalive.ServerParameters{
+		MaxConnectionIdle: 15 * time.Second, // If a client is idle for 15 seconds, send a GOAWAY
+		//MaxConnectionAge:      30 * time.Second, // If any connection is alive for more than 30 seconds, send a GOAWAY
+		MaxConnectionAgeGrace: 5 * time.Second, // Allow 5 seconds for pending RPCs to complete before forcibly closing connections
+		Time:                  5 * time.Second, // Ping the client if it is idle for 5 seconds to ensure the connection is still active
+		Timeout:               1 * time.Second, // Wait 1 second for the ping ack before assuming the connection is dead
+	}
+
+	s.Server = grpc.NewServer(
+		grpc.KeepaliveEnforcementPolicy(kaep),
+		grpc.KeepaliveParams(kasp),
+		grpc.ConnectionTimeout(duration),
+		grpc.UnaryInterceptor(middlewares),
+		grpc.MaxSendMsgSize(s.conf.MsgSizeSend),
+		grpc.MaxRecvMsgSize(s.conf.MsgSizeReceive),
+	)
+
+	logger.Log().Infof("grpc-server: init at %v", s.conf.Address)
+
+	return nil
+}
+
+func (s *grpcServer) ListenAndServe() {
+	logger.Log().Infof("Starting grpc server at %v", s.conf.Address)
+	lis, err := net.Listen("tcp", s.conf.Address)
+	if err != nil {
+		logger.Log().Fatalf(
+			"failed to listen on port %s: %v", s.conf.Address, err.Error(),
+		)
+	}
+
+	if err = s.Server.Serve(lis); err != nil {
+		logger.Log().Fatalf(
+			"failed to serve gRPC on port %s: %v", s.conf.Address, err.Error(),
+		)
+	}
+}
+
+func (s *grpcServer) Close() {
+	logger.Log().Infof("grpc-server: close")
+	s.GracefulStop()
+}
+
+{{- end -}}
