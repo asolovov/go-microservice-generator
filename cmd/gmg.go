@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gmg/cmd/gen"
 	"os"
 
 	"github.com/misnaged/annales/logger"
@@ -22,6 +23,7 @@ func main() {
 	}
 
 	rootCmd := root.Cmd(app)
+	rootCmd.AddCommand(gen.Cmd(app))
 	//rootCmd.AddCommand(serve.Cmd(app))
 
 	if err := rootCmd.Execute(); err != nil {
