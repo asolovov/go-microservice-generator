@@ -2,14 +2,13 @@ package internal
 
 import (
 	"fmt"
-	"gmg/config"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/misnaged/annales/logger"
 	version "github.com/misnaged/annales/versioner"
 	"github.com/sirupsen/logrus"
+
+	"gmg/config"
+	"gmg/internal/service"
 )
 
 // App is main microservice application instance that
@@ -19,6 +18,8 @@ type App struct {
 	config *config.Scheme
 
 	version *version.Version
+
+	service service.IService
 }
 
 // NewApplication create new App instance
@@ -43,18 +44,17 @@ func (app *App) Init() (err error) {
 		logger.Log().Infof("DEBUG LOGS OFF")
 	}
 
+	if app.service, err = service.New(); err != nil {
+		return fmt.Errorf("init service: %w", err)
+	}
+
 	return nil
 }
 
-// Serve start serving Application service
-func (app *App) Serve() error {
-	// Gracefully shutdown the server
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	<-quit
-
-	app.Stop()
+func (app *App) Generate(cfgPath string) error {
+	if err := app.service.GenerateApplication(cfgPath); err != nil {
+		return fmt.Errorf("generate application: %w", err)
+	}
 
 	return nil
 }
