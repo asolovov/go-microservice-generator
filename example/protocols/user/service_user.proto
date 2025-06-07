@@ -1,0 +1,10 @@
+syntax = "proto3";
+package user.service;
+
+option go_package = "protocols/user_pb";
+
+import "models_user.proto";
+
+service UserService {
+  rpc GetUser(models.Blank) returns(models.User);
+}

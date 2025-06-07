@@ -1,0 +1,12 @@
+syntax = "proto3";
+package user.models;
+
+option go_package = "protocols/user_pb";
+
+message User {
+  int64 id = 1;
+  string name = 2;
+}
+
+message Blank {}
+
