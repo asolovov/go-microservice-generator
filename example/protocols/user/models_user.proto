@@ -4,8 +4,11 @@ package user.models;
 option go_package = "protocols/user_pb";
 
 message User {
-  int64 id = 1;
+  string uuid = 1;
   string name = 2;
+  string eth_public_address = 3;
+  string balance_big = 4;
+  int64 created_at_ts = 5; //unix seconds
 }
 
 message Blank {}

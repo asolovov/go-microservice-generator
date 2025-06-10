@@ -1,6 +1,6 @@
 root: ./example
-go-package: example_user_srv
-go-mod-generate: true
+go-package: example_service
+go-mod-generate: false
 
 cfg:
   generate: true
@@ -25,23 +25,23 @@ grpc-server:
 
   proto-models:
     path: /protocols/user
-    go-name: users_pb
+    go-name: user_pb
 
 repository:
   generate: true
   default-addr: postgres://postgres:postgres@localhost:5432/users?sslmode=disable
-  migrations-path: /migrations
 
 models:
-  generate: true
-  pb-model-paths:
-    - /protocols/user
   ai:
     generate: true
+    domain-model-paths:
+      - /models/user.go
+    pb-model-paths:
+      - /protocols/user/models_user.proto
+    migration-paths:
+      - /migrations/000001_users.up.sql
     parsing-rules:
       proto-domain:
         User: User
-        UserRole: Role
-        CreateUserReq: CreateRequest
       domain-db:
         User: users
