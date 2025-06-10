@@ -9,4 +9,7 @@ func init() {
 	// environment - could be "local", "prod", "dev"
 	viper.SetDefault("env", "prod")
 	viper.SetDefault("Debug", true)
+
+	viper.SetDefault("Agent.DefaultModel", "o3-mini")
+	viper.SetDefault("Agent.OpenAIKey", "")
 }

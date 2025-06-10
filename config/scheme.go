@@ -1,8 +1,12 @@
 package config
 
+import "gmg/external/modelsAgent"
+
 // Scheme represents the application configuration scheme.
 type Scheme struct {
 	// Env is the application environment.
 	Env   string
 	Debug bool
+
+	Agent *modelsAgent.Config
 }
