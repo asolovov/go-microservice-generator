@@ -64,25 +64,21 @@ repository:
   # default db address e.g. postgres://postgres:postgres@localhost:5432/users?sslmode=disable
   default-addr: !!str
 
-  # migration files path. If given will generate db models. e.g. /migrations
-  migrations-path: !!str
-
 models:
-  !required
-  generate: !!bool
-
-  # a path to existing models. AI Agent and generator will not modify existing models, only add parsing methods if
-  # requested
-  path: !!str
-
   # optional request to an ai agent to create parsing methods for models
   ai:
     !required
     generate: !!bool
 
-    # .pb model file paths
+    # .go domain model file paths
     !required
+    domain-model-paths: !!seq
+
+    # .pb model file paths
     pb-model-paths: !!seq
+
+    # .sql migration file paths
+    migration-paths: !!seq
 
     # parsing rules for models. Agent will receive a prompt to write code for parsing models from one type to another
     # see gmg-cfg-example.yaml for more details

@@ -49,8 +49,8 @@ update:
 	go get -u ./...
 
 # The run target runs the application with race detection enabled
-run:
-	GODEBUG=xray_ptrace=1 go run -race $(APP_ENTRY_POINT) serve
+run-example:
+	GODEBUG=xray_ptrace=1 go run -race $(APP_ENTRY_POINT) gen -c gmg-cfg-example.yaml
 
 # The build target builds the application for the current system
 build:

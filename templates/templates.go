@@ -14,7 +14,6 @@ import (
 //go:embed cmd/*.gotmpl
 //go:embed cmd/root/*.gotmpl
 //go:embed cmd/serve/*.gotmpl
-//go:embed models/*.gotmpl
 var templatesFS embed.FS
 
 var Tmpls *template.Template
@@ -26,7 +25,6 @@ func init() {
 		"internal/*.gotmpl", "internal/service/*.gotmpl", "internal/repository/*.gotmpl",
 		"internal/server/*.gotmpl", "internal/server/grpcServer/*.gotmpl",
 		"cmd/root/*.gotmpl", "cmd/serve/*.gotmpl", "cmd/*.gotmpl",
-		"models/*.gotmpl",
 	)
 	if err != nil {
 		panic(err)
