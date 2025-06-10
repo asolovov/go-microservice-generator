@@ -9,6 +9,7 @@ import (
 	"github.com/misnaged/annales/logger"
 	"gopkg.in/yaml.v3"
 
+	"gmg/external/modelsAgent"
 	"gmg/models"
 	"gmg/templates"
 )
@@ -21,10 +22,14 @@ type IService interface {
 
 type service struct {
 	genCfg *models.GenerateCfg
+
+	agent modelsAgent.IModelsAgent
 }
 
-func New() (IService, error) {
-	s := &service{}
+func New(agent modelsAgent.IModelsAgent) (IService, error) {
+	s := &service{
+		agent: agent,
+	}
 
 	if err := s.init(); err != nil {
 		return nil, fmt.Errorf("init service: %w", err)
@@ -65,8 +70,7 @@ func (s *service) GenerateLayout() error {
 		}
 	}
 
-	if s.genCfg.IsGenModels {
-		fmt.Println("= Generating Models init")
+	if s.genCfg.Models.AI.Generate {
 		if err := s.genModels(); err != nil {
 			return fmt.Errorf("generate models: %w", err)
 		}
@@ -152,10 +156,6 @@ func (s *service) parseCfg(cfgPath string) error {
 
 	if s.genCfg.GrpcServer.Generate {
 		s.genCfg.GrpcServer.ProtoModels.SameAsService = s.genCfg.GrpcServer.ProtoModels.Path == s.genCfg.GrpcServer.ProtoService.Path
-	}
-
-	if s.genCfg.Models.Generate {
-		s.genCfg.IsGenModels = len(s.genCfg.Models.Path) == 0
 	}
 
 	return nil

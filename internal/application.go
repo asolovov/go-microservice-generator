@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"gmg/config"
+	"gmg/external/modelsAgent"
 	"gmg/internal/service"
 )
 
@@ -20,6 +21,7 @@ type App struct {
 	version *version.Version
 
 	service service.IService
+	agent   modelsAgent.IModelsAgent
 }
 
 // NewApplication create new App instance
@@ -44,7 +46,11 @@ func (app *App) Init() (err error) {
 		logger.Log().Infof("DEBUG LOGS OFF")
 	}
 
-	if app.service, err = service.New(); err != nil {
+	if app.agent, err = modelsAgent.NewModelsAgent(app.config.Agent); err != nil {
+		return fmt.Errorf("init models agent: %w", err)
+	}
+
+	if app.service, err = service.New(app.agent); err != nil {
 		return fmt.Errorf("init service: %w", err)
 	}
 
